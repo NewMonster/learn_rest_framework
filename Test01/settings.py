@@ -148,8 +148,8 @@ REST_FRAMEWORK={
     # 节流  全局配置访问控制  默认全局使用用户名进行控制频率
     "DEFAULT_THROTTLE_CLASSES":['api.utils.throttle.VisitedThrottle','api.utils.throttle.UserThrottle'],
     "DEFAULT_THROTTLE_RATES":{
-        "lufei":"15/m",
-        "lufei_user":"30/m"
+        "lufei":"10/m",
+        "lufei_user":"20/m"
     },
     # 版本  全局配置版本
     "DEFAULT_VERSION":'v2',   # 默认版本

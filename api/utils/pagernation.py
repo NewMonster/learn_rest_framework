@@ -17,7 +17,7 @@ from rest_framework.pagination import PageNumberPagination
 class MyPageNumberPagination(PageNumberPagination):
     # 默认每页显示是多少数据
     page_size = 2
-    # 可以通过用户传过来的参数表示每页显示数据的大小  176.234.2.113:8000/api/friends/?page=1&page_size=10
+    # 可以通过用户传过来的参数表示每页显示数据的大小  #  176.234.2.113:8000/api/friends/?page=1&page_size=10
     page_size_query_param = "page_size"    #
     # 设定用户传过来的请求显示数据的最大数量不可超过20
     max_page_size = 20

@@ -1,11 +1,14 @@
 from django.shortcuts import render
 from django.shortcuts import render, HttpResponse
+from django.http.response import JsonResponse
 from book import models
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import serializers
 from rest_framework.parsers import JSONParser,FormParser
-from rest_framework.exceptions import ValidationError
+from rest_framework.viewsets import ModelViewSet
+from rest_framework.renderers import JSONRenderer,BrowsableAPIRenderer
+
 
 import json
 
@@ -121,6 +124,33 @@ class BooksDetailview(APIView):
         bs = BookModelSerializers(book_data, many=False)
         return Response(bs.data)
 
+"""能完成简单的数据增删改查,相对于逻辑比较简单的视图可以直接配置"""
+# 书籍视图类集成度高
+class BooksModelviewset(ModelViewSet):
+    # 认证
+    authentication_classes = []
+    # 序列化
+    serializer_class = BookModelSerializers
+    # 解析器
+    pagination_classes = [JSONParser, FormParser]
+    # 认证
+    permission_classes = []
+    # 渲染器    # 全局设置
+    # renderer_classes = [JSONRenderer,BrowsableAPIRenderer]
+    # 查询数据
+    queryset = models.Book.objects.all()
+
+class BooksModelDetailviewset(ModelViewSet):
+    # 认证
+    authentication_classes = []
+    # 序列化
+    serializer_class = BookModelSerializers
+    # 解析器
+    pagination_classes = [JSONParser, FormParser]
+    # 认证
+    permission_classes = []
+
+
 
 # 作者序列化类
 class AuthorsModelSerializers(serializers.ModelSerializer):
@@ -205,3 +235,52 @@ class PublishersDetailview(APIView):
         publish_data = models.Publish.objects.filter(pk=pk).first()
         bs = PublishersModelSerializers(publish_data, many=False)
         return Response(bs.data)
+
+
+import hashlib
+import time
+
+# 创建加密后的token值
+def create_md5(user):
+    new_md5=hashlib.md5(bytes(user,encoding='utf-8'))
+    new_md5.update(bytes(time.time(),encoding='utf-8'))
+    return new_md5.hexdigest()
+
+
+class UsersModelSerializers(serializers.ModelSerializer):
+    class Meta:
+        models=models.Users
+        fields="__all__"
+
+
+class LoginView(APIView):
+    # 认证
+    authentication_classes = []
+    # 解析器
+    parser_classes = [JSONParser, FormParser]
+
+
+    def post(self, request, *args, **kwargs):
+        ret={"msg":"验证成功",'code':1000}
+        try:
+            print(request.data,type(request.data))
+            name=request.data.get('name')
+            pwd=request.data.get("pwd")
+            obj=models.Users.objects.filter(name=name,password=pwd).first()
+            if not obj:
+                ret['code']=1001
+                ret['msg']='用户名或密码错误'
+                return HttpResponse(json.dumps(ret))
+            # 为用户创建token
+            token=create_md5(name)
+            models.UserToken.objects.update_or_create(user=obj,defaults={'token':token})
+            ret['token']=token
+            return JsonResponse(ret)
+        except Exception as e:
+            print(e)
+            ret['code']=1002
+            ret['msg']='请求异常'
+            return JsonResponse(ret)
+
+
+
